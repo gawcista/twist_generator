@@ -1,4 +1,4 @@
-from twist_generator.tools import calc_angle
+from twist_generator.tools import calc_angle,get_symmetry_info,print_symmetry_info
 from numpy import linalg,floor,array
 from copy import deepcopy
 
@@ -51,7 +51,7 @@ class atomic_structure:
 	nions = 0
 	thickness = 0
 
-	def __init__(self,file='POSCAR',mode='vasp',title=None,*args, **kwargs):
+	def __init__(self,file='POSCAR',mode='vasp',title=None,symmetry=True,symprec=1e-5,angle_tolerance=-1.0,*args, **kwargs):
 		if mode == 'vasp':
 			self.generate_from_vasp(file,*args, **kwargs)
 		if mode == 'lammps':
@@ -69,6 +69,8 @@ class atomic_structure:
 
 		if title is not None:
 			self.title = title
+		if mode!='empty' and symmetry:
+			self.print_symmetry(label='Input symmetry',symprec=symprec,angle_tolerance=angle_tolerance)
 
 	def generate_from_vasp(self,file='POSCAR',auto_standardize=False):
 		# initialize a lattice from a POSCAR file
@@ -210,6 +212,12 @@ class atomic_structure:
 		c = linalg.norm(self.basis[2])
 		return [a,b,c]
 
+	def get_symmetry(self,symprec=1e-5,angle_tolerance=-1.0):
+		return get_symmetry_info(self,symprec=symprec,angle_tolerance=angle_tolerance)
+
+	def print_symmetry(self,label='Symmetry',symprec=1e-5,angle_tolerance=-1.0):
+		return print_symmetry_info(self,label=label,symprec=symprec,angle_tolerance=angle_tolerance)
+
 	def strain(self,strain_list):
 		for i in range(3):
 			self.basis[i]=(array(self.basis[i])*strain_list[i]).tolist()
@@ -325,7 +333,7 @@ class atomic_structure:
 		latticeNew.standardize()
 		return latticeNew
 
-	def print_POSCAR(self,file='CONTCAR'):
+	def print_POSCAR(self,file='CONTCAR',symmetry=True,symprec=1e-5,angle_tolerance=-1.0):
 		with open(file,'wt') as fout:
 			print(self.title,file=fout)
 			print("%19.14f"%(self.frac),file=fout)
@@ -346,3 +354,5 @@ class atomic_structure:
 					print(" %s %s %s"%(self.atom[i].dynamics[0],self.atom[i].dynamics[1],self.atom[i].dynamics[2]),file=fout)
 				else:
 					print(file=fout)
+		if symmetry:
+			self.print_symmetry(label='Output symmetry',symprec=symprec,angle_tolerance=angle_tolerance)

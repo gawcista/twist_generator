@@ -1,6 +1,11 @@
 from numpy import degrees,arccos,array,linalg
 from copy import deepcopy
 
+try:
+	import spglib
+except ImportError:
+	spglib = None
+
 def calc_angle(a,b): 
 	# Calculate the angle between vectors <a,b>
 	return degrees(arccos(array(a).dot(array(b))/(linalg.norm(a)*linalg.norm(b))))
@@ -54,6 +59,79 @@ def equals_vec(a,b,tol=1e-8):
 			flag=False
 			break
 	return flag
+
+def spglib_cell(lattice):
+	if spglib is None:
+		raise ImportError("spglib is required for symmetry analysis.")
+	if lattice.nions==0:
+		raise ValueError("Symmetry analysis requires at least one atom.")
+	scale = lattice.frac if getattr(lattice,'frac',1.0)>0 else 1.0
+	cell = (array(lattice.basis)*scale).tolist()
+	positions = []
+	for atom in lattice.atom:
+		position = _direct_position(lattice,atom)
+		positions.append((position[0]%1.0,position[1]%1.0,position[2]%1.0))
+	element_index = {}
+	numbers = []
+	for atom in lattice.atom:
+		if atom.element not in element_index:
+			element_index[atom.element] = len(element_index)+1
+		numbers.append(element_index[atom.element])
+	return (cell,positions,numbers)
+
+def get_symmetry_info(lattice,symprec=1e-5,angle_tolerance=-1.0):
+	cell = spglib_cell(lattice)
+	dataset = spglib.get_symmetry_dataset(
+		cell,
+		symprec=symprec,
+		angle_tolerance=angle_tolerance,
+	)
+	if dataset is None:
+		return {
+			'found': False,
+			'symprec': symprec,
+			'angle_tolerance': angle_tolerance,
+		}
+	return {
+		'found': True,
+		'number': int(dataset.number),
+		'international': dataset.international,
+		'hall_number': int(dataset.hall_number),
+		'hall': dataset.hall,
+		'pointgroup': dataset.pointgroup,
+		'n_operations': len(dataset.rotations),
+		'symprec': symprec,
+		'angle_tolerance': angle_tolerance,
+	}
+
+def format_symmetry_info(info,label='Symmetry'):
+	if not info['found']:
+		return "%s: not found (symprec=%g, angle_tolerance=%g)"%(label,info['symprec'],info['angle_tolerance'])
+	return (
+		"%s: SG %d %s, Hall %d %s, point group %s, operations %d "
+		"(symprec=%g, angle_tolerance=%g)"
+	)%(
+		label,
+		info['number'],
+		info['international'],
+		info['hall_number'],
+		info['hall'],
+		info['pointgroup'],
+		info['n_operations'],
+		info['symprec'],
+		info['angle_tolerance'],
+	)
+
+def print_symmetry_info(lattice,label='Symmetry',symprec=1e-5,angle_tolerance=-1.0):
+	try:
+		info = get_symmetry_info(lattice,symprec=symprec,angle_tolerance=angle_tolerance)
+		print(format_symmetry_info(info,label=label))
+		return info
+	except ImportError as exc:
+		print("%s: skipped (%s)"%(label,exc))
+	except ValueError as exc:
+		print("%s: skipped (%s)"%(label,exc))
+	return None
 
 def _check_z_aligned_cell(lattice):
 	# The z placement below assumes a slab cell whose c axis is normal to xy.

@@ -37,10 +37,57 @@ from twist_generator.structure import atomic_structure
 lattice = atomic_structure("POSCAR")
 ```
 
+By default, reading a structure runs a spglib symmetry check and prints a one-line summary such as:
+
+```text
+Input symmetry: SG 191 P6/mmm, Hall 480 -P 6 2, point group 6/mmm, operations 24 (symprec=1e-05, angle_tolerance=-1)
+```
+
+Disable this read-time report when needed:
+
+```python
+lattice = atomic_structure("POSCAR", symmetry=False)
+```
+
 If Python imports an older installed package instead of this checkout, run from the parent directory or set:
 
 ```bash
 export PYTHONPATH=/home/gawcista/scripts
+```
+
+## Symmetry Analysis
+
+Symmetry analysis is implemented with `spglib`. You can query or print symmetry from any `atomic_structure` object:
+
+```python
+info = lattice.get_symmetry(symprec=1e-5, angle_tolerance=-1.0)
+lattice.print_symmetry(label="Monolayer symmetry")
+```
+
+The returned `info` dictionary includes:
+
+```python
+{
+    "found": True,
+    "number": 191,
+    "international": "P6/mmm",
+    "hall_number": 480,
+    "hall": "-P 6 2",
+    "pointgroup": "6/mmm",
+    "n_operations": 24,
+}
+```
+
+`print_POSCAR()` runs an output symmetry check by default after writing the file:
+
+```python
+bilayer.print_POSCAR("CONTCAR")
+```
+
+Disable the output symmetry report with:
+
+```python
+bilayer.print_POSCAR("CONTCAR", symmetry=False)
 ```
 
 ## `generator` Module
@@ -110,12 +157,14 @@ generate_aligned(
 Available helpers:
 
 ```python
-generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, **kargs)
+generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 generate_square_100(m, n, **kargs)
 generate_square_110(m, n, **kargs)
 generate_hexagonal_210(m, n, **kargs)
-generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, **kargs)
+generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 ```
+
+The `generator` helpers print output symmetry by default because they call `print_POSCAR(..., symmetry=True)`.
 
 ## `build` Module
 
@@ -289,6 +338,7 @@ The tests cover:
 - wrapped fractional z coordinates;
 - explicit `vacuum` override;
 - aligned bilayer x/y translation;
+- spglib symmetry reports on read/write paths;
 - invalid negative parameters, tilted c axis, and bulk-like z distributions.
 
 ---
@@ -334,10 +384,57 @@ from twist_generator.structure import atomic_structure
 lattice = atomic_structure("POSCAR")
 ```
 
+默认情况下，读入结构时会运行 spglib 对称性检查，并打印一行摘要，例如：
+
+```text
+Input symmetry: SG 191 P6/mmm, Hall 480 -P 6 2, point group 6/mmm, operations 24 (symprec=1e-05, angle_tolerance=-1)
+```
+
+如需关闭读入时的报告：
+
+```python
+lattice = atomic_structure("POSCAR", symmetry=False)
+```
+
 如果 Python 导入了已安装的旧版本，而不是当前源码目录，可以从父目录运行，或设置：
 
 ```bash
 export PYTHONPATH=/home/gawcista/scripts
+```
+
+## 对称性分析
+
+对称性分析使用 `spglib` 实现。任何 `atomic_structure` 对象都可以直接查询或打印对称性：
+
+```python
+info = lattice.get_symmetry(symprec=1e-5, angle_tolerance=-1.0)
+lattice.print_symmetry(label="Monolayer symmetry")
+```
+
+返回的 `info` 字典包含：
+
+```python
+{
+    "found": True,
+    "number": 191,
+    "international": "P6/mmm",
+    "hall_number": 480,
+    "hall": "-P 6 2",
+    "pointgroup": "6/mmm",
+    "n_operations": 24,
+}
+```
+
+`print_POSCAR()` 写出文件后默认会输出构造后结构的对称性：
+
+```python
+bilayer.print_POSCAR("CONTCAR")
+```
+
+如需关闭输出结构的对称性报告：
+
+```python
+bilayer.print_POSCAR("CONTCAR", symmetry=False)
 ```
 
 ## `generator` 模块
@@ -407,12 +504,14 @@ generate_aligned(
 可用 helper：
 
 ```python
-generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, **kargs)
+generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 generate_square_100(m, n, **kargs)
 generate_square_110(m, n, **kargs)
 generate_hexagonal_210(m, n, **kargs)
-generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, **kargs)
+generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 ```
+
+`generator` helper 默认会打印输出结构的对称性，因为它们内部调用 `print_POSCAR(..., symmetry=True)`。
 
 ## `build` 模块
 
@@ -586,4 +685,5 @@ PYTHONPATH=/home/gawcista/scripts python -m unittest discover -s tests -v
 - wrapped fractional z 坐标；
 - 显式 `vacuum` 覆盖；
 - aligned 双层 x/y 平移；
+- spglib 在读入和写出路径上的对称性报告；
 - 负参数、倾斜 c 轴和 bulk-like z 分布等异常输入。

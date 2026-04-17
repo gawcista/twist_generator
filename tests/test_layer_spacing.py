@@ -1,6 +1,9 @@
 import sys
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -122,6 +125,48 @@ class LayerSpacingTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             combine_lattice(lattice, lattice, 4.)
+
+    def test_symmetry_info_uses_spglib(self):
+        lattice = make_lattice(1., [0.])
+
+        info = lattice.get_symmetry()
+
+        self.assertTrue(info['found'])
+        self.assertEqual(info['number'], 221)
+        self.assertEqual(info['international'], 'Pm-3m')
+
+    def test_reading_vasp_reports_input_symmetry(self):
+        poscar = """test
+1.0
+1 0 0
+0 1 0
+0 0 1
+X
+1
+Direct
+0 0 0
+"""
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "POSCAR"
+            path.write_text(poscar)
+            output = StringIO()
+            with redirect_stdout(output):
+                atomic_structure(str(path))
+
+        self.assertIn("Input symmetry: SG 221 Pm-3m", output.getvalue())
+
+    def test_print_poscar_reports_output_symmetry(self):
+        lattice = make_lattice(1., [0.])
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "POSCAR.out"
+            output = StringIO()
+            with redirect_stdout(output):
+                lattice.print_POSCAR(str(path))
+
+            self.assertTrue(path.exists())
+
+        self.assertIn("Output symmetry: SG 221 Pm-3m", output.getvalue())
 
 
 if __name__ == '__main__':
