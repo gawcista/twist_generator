@@ -51,25 +51,27 @@ class atomic_structure:
 	nions = 0
 	thickness = 0
 
-	def __init__(self,file='POSCAR',mode='vasp',title=None,symmetry=True,symprec=1e-5,angle_tolerance=-1.0,*args, **kwargs):
+	def __init__(self,file='POSCAR',mode='vasp',title=None,symcheck=False,symprec=1e-5,angle_tolerance=-1.0,*args, **kwargs):
+		self.title = ''
+		self.frac = 1.0
+		self.basis = []
+		self.elements = []
+		self.natoms = []
+		self.selective_dynamics = 1
+		self.tag = 'Direct'
+		self.atom = []
+		self.nions = 0
+		self.thickness = 0
 		if mode == 'vasp':
 			self.generate_from_vasp(file,*args, **kwargs)
 		if mode == 'lammps':
 			self.generate_from_lammps(file,*args, **kwargs)
 		if mode == 'empty':
-			self.frac = 1.0
-			self.basis = []
-			self.elements = []
-			self.natoms = []
-			self.selective_dynamics = 1
-			self.tag = 'Direct'
-			self.atom = []
-			self.nions = 0
-			self.thickness = 0
+			pass
 
 		if title is not None:
 			self.title = title
-		if mode!='empty' and symmetry:
+		if mode!='empty' and symcheck:
 			self.print_symmetry(label='Input symmetry',symprec=symprec,angle_tolerance=angle_tolerance)
 
 	def generate_from_vasp(self,file='POSCAR',auto_standardize=False):
@@ -333,7 +335,7 @@ class atomic_structure:
 		latticeNew.standardize()
 		return latticeNew
 
-	def print_POSCAR(self,file='CONTCAR',symmetry=True,symprec=1e-5,angle_tolerance=-1.0):
+	def print_POSCAR(self,file='CONTCAR',symcheck=False,symprec=1e-5,angle_tolerance=-1.0):
 		with open(file,'wt') as fout:
 			print(self.title,file=fout)
 			print("%19.14f"%(self.frac),file=fout)
@@ -354,5 +356,5 @@ class atomic_structure:
 					print(" %s %s %s"%(self.atom[i].dynamics[0],self.atom[i].dynamics[1],self.atom[i].dynamics[2]),file=fout)
 				else:
 					print(file=fout)
-		if symmetry:
+		if symcheck:
 			self.print_symmetry(label='Output symmetry',symprec=symprec,angle_tolerance=angle_tolerance)

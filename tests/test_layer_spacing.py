@@ -151,7 +151,7 @@ Direct
             path.write_text(poscar)
             output = StringIO()
             with redirect_stdout(output):
-                atomic_structure(str(path))
+                atomic_structure(str(path), symcheck=True)
 
         self.assertIn("Input symmetry: SG 221 Pm-3m", output.getvalue())
 
@@ -162,7 +162,7 @@ Direct
             path = Path(tmpdir) / "POSCAR.out"
             output = StringIO()
             with redirect_stdout(output):
-                lattice.print_POSCAR(str(path))
+                lattice.print_POSCAR(str(path), symcheck=True)
 
             self.assertTrue(path.exists())
 

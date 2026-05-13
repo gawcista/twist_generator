@@ -37,16 +37,16 @@ from twist_generator.structure import atomic_structure
 lattice = atomic_structure("POSCAR")
 ```
 
-By default, reading a structure runs a spglib symmetry check and prints a one-line summary such as:
+Reading a structure does not run symmetry checks by default. Enable spglib symmetry reporting when needed:
+
+```python
+lattice = atomic_structure("POSCAR", symcheck=True)
+```
+
+This prints a one-line summary such as:
 
 ```text
 Input symmetry: SG 191 P6/mmm, Hall 480 -P 6 2, point group 6/mmm, operations 24 (symprec=1e-05, angle_tolerance=-1)
-```
-
-Disable this read-time report when needed:
-
-```python
-lattice = atomic_structure("POSCAR", symmetry=False)
 ```
 
 If Python imports an older installed package instead of this checkout, run from the parent directory or set:
@@ -78,16 +78,10 @@ The returned `info` dictionary includes:
 }
 ```
 
-`print_POSCAR()` runs an output symmetry check by default after writing the file:
+`print_POSCAR()` does not run symmetry checks by default. Enable when needed:
 
 ```python
-bilayer.print_POSCAR("CONTCAR")
-```
-
-Disable the output symmetry report with:
-
-```python
-bilayer.print_POSCAR("CONTCAR", symmetry=False)
+bilayer.print_POSCAR("CONTCAR", symcheck=True)
 ```
 
 ## `generator` Module
@@ -157,14 +151,14 @@ generate_aligned(
 Available helpers:
 
 ```python
-generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
+generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, symcheck=False, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 generate_square_100(m, n, **kargs)
 generate_square_110(m, n, **kargs)
 generate_hexagonal_210(m, n, **kargs)
-generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
+generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, symcheck=False, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 ```
 
-The `generator` helpers print output symmetry by default because they call `print_POSCAR(..., symmetry=True)`.
+The `generator` helpers do not run symmetry checks by default. Pass `symcheck=True` to enable output symmetry reporting.
 
 ## `build` Module
 
@@ -384,16 +378,16 @@ from twist_generator.structure import atomic_structure
 lattice = atomic_structure("POSCAR")
 ```
 
-默认情况下，读入结构时会运行 spglib 对称性检查，并打印一行摘要，例如：
+读入结构时默认不运行对称性检查。需要时启用 spglib 对称性报告：
+
+```python
+lattice = atomic_structure("POSCAR", symcheck=True)
+```
+
+此时会打印一行摘要，例如：
 
 ```text
 Input symmetry: SG 191 P6/mmm, Hall 480 -P 6 2, point group 6/mmm, operations 24 (symprec=1e-05, angle_tolerance=-1)
-```
-
-如需关闭读入时的报告：
-
-```python
-lattice = atomic_structure("POSCAR", symmetry=False)
 ```
 
 如果 Python 导入了已安装的旧版本，而不是当前源码目录，可以从父目录运行，或设置：
@@ -425,16 +419,10 @@ lattice.print_symmetry(label="Monolayer symmetry")
 }
 ```
 
-`print_POSCAR()` 写出文件后默认会输出构造后结构的对称性：
+`print_POSCAR()` 写出文件后默认不输出对称性报告。需要时启用：
 
 ```python
-bilayer.print_POSCAR("CONTCAR")
-```
-
-如需关闭输出结构的对称性报告：
-
-```python
-bilayer.print_POSCAR("CONTCAR", symmetry=False)
+bilayer.print_POSCAR("CONTCAR", symcheck=True)
 ```
 
 ## `generator` 模块
@@ -504,14 +492,14 @@ generate_aligned(
 可用 helper：
 
 ```python
-generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
+generate_bilayer(P1, P2, lattice, d=4, filename='CONTCAR', vacuum=None, symcheck=False, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 generate_square_100(m, n, **kargs)
 generate_square_110(m, n, **kargs)
 generate_hexagonal_210(m, n, **kargs)
-generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, symmetry=True, symprec=1e-5, angle_tolerance=-1.0, **kargs)
+generate_aligned(latticeA, latticeB, m, n, d=4, filename='CONTCAR', vacuum=None, symcheck=False, symprec=1e-5, angle_tolerance=-1.0, **kargs)
 ```
 
-`generator` helper 默认会打印输出结构的对称性，因为它们内部调用 `print_POSCAR(..., symmetry=True)`。
+`generator` helper 默认不运行对称性检查。传入 `symcheck=True` 可启用输出对称性报告。
 
 ## `build` 模块
 
